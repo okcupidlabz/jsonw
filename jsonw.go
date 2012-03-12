@@ -39,17 +39,39 @@ func isUint(v reflect.Value) bool {
 }
 
 func (jw *JsonWrap) GetInt() (ret int64, err error) {
-    v := reflect.ValueOf (jw.dat)
-    if isInt (v) {
-        ret = v.Int()
-    } else if ! isUint (v) {
-        err = JsonWrapError { "Field is not of integer type" }
-    } else if v.Uint() <= (1<<63 - 1) {
-        ret = int64(v.Uint());
+    if jw.err != nil {
+        err = jw.err;
     } else {
-        err = JsonWrapError { "Signed int64 overflow error" }
+        v := reflect.ValueOf (jw.dat)
+        if isInt (v) {
+            ret = v.Int()
+        } else if ! isUint (v) {
+            err = JsonWrapError { "Field is not of integer type" }
+        } else if v.Uint() <= (1<<63 - 1) {
+            ret = int64(v.Uint());
+        } else {
+            err = JsonWrapError { "Signed int64 overflow error" }
+        }
     }
     return 
+}
+
+func (jw *JsonWrap) GetUint() (ret uint64, err error) {
+    if jw.err != nil {
+        err = jw.err;
+    } else {
+        v := reflect.ValueOf (jw.dat)
+        if isUint (v) {
+            ret = v.Uint()
+        } else if ! isInt (v) {
+            err = JsonWrapError { "Field is not of integer type" }
+        } else if v.Int() >= 0 {
+            ret = uint64(v.Int());
+        } else {
+            err = JsonWrapError { "Unsigned uint64 underflow error" }
+        }
+    }
+    return
 }
 
 func (jw *JsonWrap) GetString() (string, bool) {
