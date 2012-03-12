@@ -18,6 +18,10 @@ type JsonWrapError struct {
 
 func (e JsonWrapError) Error() string { return e.msg; }
 
+func wrongType (w string, g reflect.Kind) JsonWrapError {
+    return JsonWrapError { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
+}
+
 func MakeJsonWrap (i interface{}) (jw *JsonWrap) {
     jw = new (JsonWrap);
     jw.dat = i;
@@ -46,7 +50,7 @@ func (jw *JsonWrap) GetInt() (ret int64, err error) {
         if isInt (v) {
             ret = v.Int()
         } else if ! isUint (v) {
-            err = JsonWrapError { "Field is not of integer type" }
+            err = wrongType ("int", v.Kind());
         } else if v.Uint() <= (1<<63 - 1) {
             ret = int64(v.Uint());
         } else {
@@ -64,7 +68,7 @@ func (jw *JsonWrap) GetUint() (ret uint64, err error) {
         if isUint (v) {
             ret = v.Uint()
         } else if ! isInt (v) {
-            err = JsonWrapError { "Field is not of integer type" }
+            err = wrongType ("uint", v.Kind());
         } else if v.Int() >= 0 {
             ret = uint64(v.Int());
         } else {
@@ -74,9 +78,33 @@ func (jw *JsonWrap) GetUint() (ret uint64, err error) {
     return
 }
 
-func (jw *JsonWrap) GetString() (string, bool) {
-    s, ok := (jw.dat).(string);
-    return s, ok;
+func (jw *JsonWrap) GetBool (ret bool, err error) {
+    if jw.err != nil {
+        err = jw.err
+    } else {
+        v := reflect.ValueOf (jw.dat)
+        k := v.Kind()
+        if k == reflect.Bool {
+            ret = v.Bool();
+        } else {
+            err = wrongType("bool", k);
+        }
+    }
+}
+
+func (jw *JsonWrap) GetString() (ret string, err error) {
+    if jw.err != nil {
+        err = jw.err;
+    } else {
+        v := reflect.ValueOf (jw.dat)
+        k := v.Kind()
+        if k == reflect.String {
+            ret = v.String();
+        } else {
+            err = wrongType("string", k);
+        }
+    }
+    return
 }
 
 func (jw *JsonWrap) AtIndex(i int) (*JsonWrap) {
