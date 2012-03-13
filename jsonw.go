@@ -133,6 +133,21 @@ func (jw *JsonWrap) Len() (ret int, err error) {
     return
 }
 
+func (jw *JsonWrap) Keys() (v []string, err error) {
+    tmp, d := jw.asDictionary()
+    if d == nil {
+      err = tmp.err;
+    } else {
+      v = make([]string, len(d));
+      var i int = 0;
+      for k,_ := range d {
+        v[i] = k
+        i++
+      }
+    }
+    return
+}
+
 func (jw *JsonWrap) asArray() (ret *JsonWrap, v []interface{}) {
     if jw.err != nil {
         ret = jw;
