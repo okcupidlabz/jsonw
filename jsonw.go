@@ -151,7 +151,7 @@ func (rd *Wrapper) AtIndex(i int) *Wrapper {
     ret, v := rd.asArray()
     if v == nil {
 
-    } else if len (v) >= i {
+    } else if len (v) <= i {
         m := fmt.Sprintf ("index out of bounds %d >= %d", i, len(v))
         ret.err = &Error { m };
     } else {

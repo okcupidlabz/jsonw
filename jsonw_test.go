@@ -54,5 +54,16 @@ func TestDict (t *testing.T) {
         t.Errorf("Dictionary fail for birds.sparrow: %d != %d", v, parrot);
     }
 
+    w.AtKey("birds").SetKey("waterfowl", NewArray(2));
+    w.AtKey("birds").AtKey("waterfowl").SetIndex(0, NewString("duck"))
+    w.AtKey("birds").AtKey("waterfowl").SetIndex(1, NewString("swan"))
+
+    if v,_ := w.AtKey("birds").AtKey("waterfowl").Len(); v != 2 {
+        t.Errorf("Wrong length for birds.waterfowl: %d v %d", v, 2);
+    }
+
+    if v,_ := w.AtKey("birds").AtKey("waterfowl").AtIndex(1).GetString(); v != "swan" {
+        t.Errorf ("Wrong waterfowl in array: %s v swan (%s)", v);
+    }
 }
 
