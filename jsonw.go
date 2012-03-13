@@ -23,9 +23,18 @@ func wrongType (w string, g reflect.Kind) *Error {
     return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
-func (i *Wrapper) GetData() interface{} { return i.dat }
+func (i *Wrapper) getData() interface{} { return i.dat }
 func (i *Wrapper) Error() *Error { return i.err; }
 func (i *Wrapper) IsOk() bool { return i.Error() == nil; }
+
+func (i *Wrapper) GetData() (dat interface{}, err error) { 
+    if i.err != nil {
+        err = *i.err
+    } else {
+        dat = i.dat
+    }
+    return 
+}
 
 func NewWrapper (i interface{}) (rd *Wrapper) {
     rd = new (Wrapper);
@@ -220,7 +229,7 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
 func (w *Wrapper) SetKey(s string, val *Wrapper) error {
     b, d := w.asDictionary()
     if d != nil {
-        d[s] = val.GetData()
+        d[s] = val.getData()
     }
     return b.Error()
 }
@@ -228,7 +237,7 @@ func (w *Wrapper) SetKey(s string, val *Wrapper) error {
 func (w *Wrapper) SetIndex (i int, val *Wrapper) error {
     b, d := w.asArray()
     if d != nil {
-        d[i] = val.GetData()
+        d[i] = val.getData()
     }
     return b.Error()
 
