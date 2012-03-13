@@ -24,3 +24,21 @@ func TestBigInt (t *testing.T) {
     }
 }
 
+func TestDict (t *testing.T) {
+    w := NewDictionary()
+    const dog = 3333
+    var cat string = "meow"
+    
+    w.SetKey("dog", NewInt(dog));
+    w.SetKey("cat", NewString(cat));
+
+    if v, _ := w.AtKey("dog").GetInt(); v != dog {
+        t.Errorf("Dictionary fail for 'dog': %d != %d", v, dog);
+    }
+
+    if v, _ := w.AtKey("cat").GetString(); v != cat {
+        t.Errorf("Dictionary fail for 'dog': %s != %s", v, cat);
+    }
+
+}
+

@@ -217,7 +217,7 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
     return ret;
 }
 
-func (w *Wrapper) SetKey(s string, val Wrapper) error {
+func (w *Wrapper) SetKey(s string, val *Wrapper) error {
     b, d := w.asDictionary()
     if d != nil {
         d[s] = val.getData()
@@ -225,7 +225,7 @@ func (w *Wrapper) SetKey(s string, val Wrapper) error {
     return b.Error()
 }
 
-func (w *Wrapper) SetIndex (i int, val Wrapper) error {
+func (w *Wrapper) SetIndex (i int, val *Wrapper) error {
     b, d := w.asArray()
     if d != nil {
         d[i] = val.getData()
