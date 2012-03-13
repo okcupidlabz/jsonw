@@ -7,6 +7,20 @@ import (
     "reflect"
 )
 
+type wrapper interface {
+    IsOk() bool
+    Error() *Error
+    GetInt() (ret int64, err error)
+    GetUint() (ret uint64, err error)
+    GetBool() (ret bool, err error)
+    GetString() (s string, err error)
+    AtIndex(i int) wrapper
+    Len() (ret int, err error) 
+    Keys() (v []string, err error) 
+    IsNil() bool
+    AtKey(s string) wrapper
+}
+
 type Reader struct {
     dat interface{}
     err *Error
@@ -81,7 +95,7 @@ func (rd *Reader) GetUint() (ret uint64, err error) {
     return
 }
 
-func (rd *Reader) GetBool (ret bool, err error) {
+func (rd *Reader) GetBool() (ret bool, err error) {
     if rd.err != nil {
         err = rd.err
     } else {
@@ -93,6 +107,7 @@ func (rd *Reader) GetBool (ret bool, err error) {
             err = wrongType("bool", k);
         }
     }
+    return
 }
 
 func (rd *Reader) GetString() (ret string, err error) {
@@ -110,7 +125,7 @@ func (rd *Reader) GetString() (ret string, err error) {
     return
 }
 
-func (rd *Reader) AtIndex(i int) *Reader {
+func (rd *Reader) AtIndex(i int) wrapper {
     ret, v := rd.asArray()
     if v == nil {
 
@@ -166,7 +181,7 @@ func (rd *Reader) IsNil() bool {
     return rd.dat == nil;
 }
 
-func (rd *Reader) AtKey(s string) *Reader {
+func (rd *Reader) AtKey(s string) wrapper {
     ret, d := rd.asDictionary()
 
     if d != nil {
