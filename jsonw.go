@@ -7,23 +7,34 @@ import (
     "reflect"
 )
 
-type wrapper interface {
+type Wrapper interface {
     IsOk() bool
     Error() *Error
     GetInt() (ret int64, err error)
     GetUint() (ret uint64, err error)
     GetBool() (ret bool, err error)
     GetString() (s string, err error)
-    AtIndex(i int) wrapper
+    AtIndex(i int) Wrapper
     Len() (ret int, err error) 
     Keys() (v []string, err error) 
     IsNil() bool
-    AtKey(s string) wrapper
+    AtKey(s string) Wrapper
+}
+
+type base struct {
+    dat interface{}
+    err *Error
 }
 
 type Reader struct {
-    dat interface{}
-    err *Error
+    base
+}
+
+type Writer struct {
+    base
+    parent interface{}
+    key *string
+    index *int
 }
 
 type Error struct {
@@ -36,8 +47,8 @@ func wrongType (w string, g reflect.Kind) *Error {
     return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
-func (rd *Reader) IsOk() bool { return rd.err == nil; }
-func (rd *Reader) Error() *Error { return rd.err; }
+func (i *base) Error() *Error { return i.err; }
+func (i *base) IsOk() bool { return i.Error() == nil; }
 
 func MakeReader (i interface{}) (rd *Reader) {
     rd = new (Reader);
@@ -125,8 +136,9 @@ func (rd *Reader) GetString() (ret string, err error) {
     return
 }
 
-func (rd *Reader) AtIndex(i int) wrapper {
-    ret, v := rd.asArray()
+func (rd *Reader) AtIndex(i int) Wrapper {
+    in, v := rd.asArray()
+    ret := &Reader{ *in }
     if v == nil {
 
     } else if len (v) >= i {
@@ -139,17 +151,17 @@ func (rd *Reader) AtIndex(i int) wrapper {
 }
 
 func (rd *Reader) Len() (ret int, err error) {
-    rd, v := rd.asArray()
+    tmp, v := rd.asArray()
     if v == nil {
-        err = rd.err
+        err = tmp.err
     } else {
         ret = len(v);
     }
     return
 }
 
-func (rd *Reader) Keys() (v []string, err error) {
-    tmp, d := rd.asDictionary()
+func (i *base) Keys() (v []string, err error) {
+    tmp, d := i.asDictionary()
     if d == nil {
       err = tmp.err;
     } else {
@@ -163,15 +175,15 @@ func (rd *Reader) Keys() (v []string, err error) {
     return
 }
 
-func (rd *Reader) asArray() (ret *Reader, v []interface{}) {
-    if rd.err != nil {
-        ret = rd;
+func (i *base) asArray() (ret *base, v []interface{}) {
+    if i.err != nil {
+        ret = i;
     } else {
         var ok bool
-        v, ok = (rd.dat).([]interface{});
-        ret = new(Reader);
+        v, ok = (i.dat).([]interface{});
+        ret = new(base);
         if !ok {
-            ret.err = wrongType ("array", reflect.ValueOf(rd.dat).Kind());
+            ret.err = wrongType ("array", reflect.ValueOf(i.dat).Kind());
         }
     }
     return
@@ -181,8 +193,9 @@ func (rd *Reader) IsNil() bool {
     return rd.dat == nil;
 }
 
-func (rd *Reader) AtKey(s string) wrapper {
-    ret, d := rd.asDictionary()
+func (rd *Reader) AtKey(s string) Wrapper {
+    i, d := rd.asDictionary()
+    ret := &Reader { *i }
 
     if d != nil {
         val,found := d[s];
@@ -195,15 +208,15 @@ func (rd *Reader) AtKey(s string) wrapper {
     return ret;
 }
 
-func (rd *Reader) asDictionary() (ret *Reader, d map[string]interface{}) {
-    if rd.err != nil {
-        ret = rd
+func (i *base) asDictionary() (ret *base, d map[string]interface{}) {
+    if i.err != nil {
+        ret = i
     } else {
         var ok bool
-        d, ok = (rd.dat).(map[string]interface{});
-        ret = new (Reader);
+        d, ok = (i.dat).(map[string]interface{});
+        ret = new (base);
         if !ok {
-            ret.err = wrongType ("dict", reflect.ValueOf(rd.dat).Kind());
+            ret.err = wrongType ("dict", reflect.ValueOf(i.dat).Kind());
         }
     }
     return 
