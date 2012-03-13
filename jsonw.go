@@ -51,6 +51,10 @@ func NewInt(i int) *Wrapper {
     return NewWrapper(i);
 }
 
+func NewInt64(i int64) *Wrapper {
+    return NewWrapper (i);
+}
+
 func NewUint64 (u uint64) *Wrapper {
     return NewWrapper(u)
 }
