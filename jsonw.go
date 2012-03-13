@@ -19,6 +19,7 @@ type Wrapper interface {
     Keys() (v []string, err error) 
     IsNil() bool
     AtKey(s string) Wrapper
+    getData() interface{}
 }
 
 type base struct {
@@ -32,9 +33,6 @@ type Reader struct {
 
 type Writer struct {
     base
-    parent interface{}
-    key *string
-    index *int
 }
 
 type Error struct {
@@ -47,6 +45,7 @@ func wrongType (w string, g reflect.Kind) *Error {
     return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
+func (i *base) getData() interface{} { return i.dat }
 func (i *base) Error() *Error { return i.err; }
 func (i *base) IsOk() bool { return i.Error() == nil; }
 
@@ -206,6 +205,14 @@ func (rd *Reader) AtKey(s string) Wrapper {
         }
     }
     return ret;
+}
+
+func (w *Writer) SetKey(s string, val Wrapper) error {
+    b, d := w.asDictionary()
+    if d != nil {
+        d[s] = val.getData()
+    }
+    return b.Error()
 }
 
 func (i *base) asDictionary() (ret *base, d map[string]interface{}) {
