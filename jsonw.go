@@ -7,28 +7,28 @@ import (
     "reflect"
 )
 
-type JsonWrap struct {
+type Reader struct {
     dat interface{}
-    err *JsonWrapError
+    err *Error
 }
 
-type JsonWrapError struct {
+type Error struct {
     msg string
 }
 
-func (e JsonWrapError) Error() string { return e.msg; }
+func (e Error) Error() string { return e.msg; }
 
-func wrongType (w string, g reflect.Kind) *JsonWrapError {
-    return &JsonWrapError { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
+func wrongType (w string, g reflect.Kind) *Error {
+    return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
-func (jw *JsonWrap) IsOk() bool { return jw.err == nil; }
-func (jw *JsonWrap) Error() *JsonWrapError { return jw.err; }
+func (rd *Reader) IsOk() bool { return rd.err == nil; }
+func (rd *Reader) Error() *Error { return rd.err; }
 
-func MakeJsonWrap (i interface{}) (jw *JsonWrap) {
-    jw = new (JsonWrap);
-    jw.dat = i;
-    return jw;
+func MakeReader (i interface{}) (rd *Reader) {
+    rd = new (Reader);
+    rd.dat = i;
+    return rd;
 }
 
 func isInt(v reflect.Value) bool {
@@ -45,11 +45,11 @@ func isUint(v reflect.Value) bool {
         k == reflect.Uint64
 }
 
-func (jw *JsonWrap) GetInt() (ret int64, err error) {
-    if jw.err != nil {
-        err = jw.err;
+func (rd *Reader) GetInt() (ret int64, err error) {
+    if rd.err != nil {
+        err = rd.err;
     } else {
-        v := reflect.ValueOf (jw.dat)
+        v := reflect.ValueOf (rd.dat)
         if isInt (v) {
             ret = v.Int()
         } else if ! isUint (v) {
@@ -57,17 +57,17 @@ func (jw *JsonWrap) GetInt() (ret int64, err error) {
         } else if v.Uint() <= (1<<63 - 1) {
             ret = int64(v.Uint());
         } else {
-            err = JsonWrapError { "Signed int64 overflow error" }
+            err = Error { "Signed int64 overflow error" }
         }
     }
     return 
 }
 
-func (jw *JsonWrap) GetUint() (ret uint64, err error) {
-    if jw.err != nil {
-        err = jw.err;
+func (rd *Reader) GetUint() (ret uint64, err error) {
+    if rd.err != nil {
+        err = rd.err;
     } else {
-        v := reflect.ValueOf (jw.dat)
+        v := reflect.ValueOf (rd.dat)
         if isUint (v) {
             ret = v.Uint()
         } else if ! isInt (v) {
@@ -75,17 +75,17 @@ func (jw *JsonWrap) GetUint() (ret uint64, err error) {
         } else if v.Int() >= 0 {
             ret = uint64(v.Int());
         } else {
-            err = JsonWrapError { "Unsigned uint64 underflow error" }
+            err = Error { "Unsigned uint64 underflow error" }
         }
     }
     return
 }
 
-func (jw *JsonWrap) GetBool (ret bool, err error) {
-    if jw.err != nil {
-        err = jw.err
+func (rd *Reader) GetBool (ret bool, err error) {
+    if rd.err != nil {
+        err = rd.err
     } else {
-        v := reflect.ValueOf (jw.dat)
+        v := reflect.ValueOf (rd.dat)
         k := v.Kind()
         if k == reflect.Bool {
             ret = v.Bool();
@@ -95,11 +95,11 @@ func (jw *JsonWrap) GetBool (ret bool, err error) {
     }
 }
 
-func (jw *JsonWrap) GetString() (ret string, err error) {
-    if jw.err != nil {
-        err = jw.err;
+func (rd *Reader) GetString() (ret string, err error) {
+    if rd.err != nil {
+        err = rd.err;
     } else {
-        v := reflect.ValueOf (jw.dat)
+        v := reflect.ValueOf (rd.dat)
         k := v.Kind()
         if k == reflect.String {
             ret = v.String();
@@ -110,31 +110,31 @@ func (jw *JsonWrap) GetString() (ret string, err error) {
     return
 }
 
-func (jw *JsonWrap) AtIndex(i int) *JsonWrap {
-    ret, v := jw.asArray()
+func (rd *Reader) AtIndex(i int) *Reader {
+    ret, v := rd.asArray()
     if v == nil {
 
     } else if len (v) >= i {
         m := fmt.Sprintf ("index out of bounds %d >= %d", i, len(v))
-        ret.err = &JsonWrapError { m };
+        ret.err = &Error { m };
     } else {
         ret.dat = v[i];
     }
     return ret;
 }
 
-func (jw *JsonWrap) Len() (ret int, err error) {
-    jw, v := jw.asArray()
+func (rd *Reader) Len() (ret int, err error) {
+    rd, v := rd.asArray()
     if v == nil {
-        err = jw.err
+        err = rd.err
     } else {
         ret = len(v);
     }
     return
 }
 
-func (jw *JsonWrap) Keys() (v []string, err error) {
-    tmp, d := jw.asDictionary()
+func (rd *Reader) Keys() (v []string, err error) {
+    tmp, d := rd.asDictionary()
     if d == nil {
       err = tmp.err;
     } else {
@@ -148,26 +148,26 @@ func (jw *JsonWrap) Keys() (v []string, err error) {
     return
 }
 
-func (jw *JsonWrap) asArray() (ret *JsonWrap, v []interface{}) {
-    if jw.err != nil {
-        ret = jw;
+func (rd *Reader) asArray() (ret *Reader, v []interface{}) {
+    if rd.err != nil {
+        ret = rd;
     } else {
         var ok bool
-        v, ok = (jw.dat).([]interface{});
-        ret = new(JsonWrap);
+        v, ok = (rd.dat).([]interface{});
+        ret = new(Reader);
         if !ok {
-            ret.err = wrongType ("array", reflect.ValueOf(jw.dat).Kind());
+            ret.err = wrongType ("array", reflect.ValueOf(rd.dat).Kind());
         }
     }
     return
 }
 
-func (jw *JsonWrap) IsNil() bool {
-    return jw.dat == nil;
+func (rd *Reader) IsNil() bool {
+    return rd.dat == nil;
 }
 
-func (jw *JsonWrap) AtKey(s string) *JsonWrap {
-    ret, d := jw.asDictionary()
+func (rd *Reader) AtKey(s string) *Reader {
+    ret, d := rd.asDictionary()
 
     if d != nil {
         val,found := d[s];
@@ -180,16 +180,17 @@ func (jw *JsonWrap) AtKey(s string) *JsonWrap {
     return ret;
 }
 
-func (jw *JsonWrap) asDictionary() (ret *JsonWrap, d map[string]interface{}) {
-    if jw.err != nil {
-        ret = jw
+func (rd *Reader) asDictionary() (ret *Reader, d map[string]interface{}) {
+    if rd.err != nil {
+        ret = rd
     } else {
         var ok bool
-        d, ok = (jw.dat).(map[string]interface{});
-        ret = new (JsonWrap);
+        d, ok = (rd.dat).(map[string]interface{});
+        ret = new (Reader);
         if !ok {
-            ret.err = wrongType ("dict", reflect.ValueOf(jw.dat).Kind());
+            ret.err = wrongType ("dict", reflect.ValueOf(rd.dat).Kind());
         }
     }
     return 
 }
+
