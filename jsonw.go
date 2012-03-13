@@ -215,6 +215,15 @@ func (w *Writer) SetKey(s string, val Wrapper) error {
     return b.Error()
 }
 
+func (w *Writer) SetIndex (i int, val Wrapper) error {
+    b, d := w.asArray()
+    if d != nil {
+        d[i] = val.getData()
+    }
+    return b.Error()
+
+}
+
 func (i *base) asDictionary() (ret *base, d map[string]interface{}) {
     if i.err != nil {
         ret = i
