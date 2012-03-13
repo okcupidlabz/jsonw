@@ -7,6 +7,7 @@ import (
     "reflect"
 )
 
+
 type Wrapper struct {
     dat interface{}
     err *Error
@@ -26,10 +27,40 @@ func (i *Wrapper) getData() interface{} { return i.dat }
 func (i *Wrapper) Error() *Error { return i.err; }
 func (i *Wrapper) IsOk() bool { return i.Error() == nil; }
 
-func MakeWrapper (i interface{}) (rd *Wrapper) {
+func NewWrapper (i interface{}) (rd *Wrapper) {
     rd = new (Wrapper);
     rd.dat = i;
     return rd;
+}
+
+func NewDictionary() *Wrapper {
+    m := make (map[string]interface{})
+    return NewWrapper (m);
+}
+
+func NewArray(l int) *Wrapper {
+    m := make ([]interface{}, l)
+    return NewWrapper (m);
+}
+
+func NewNil() *Wrapper {
+    return NewWrapper(nil);
+}
+
+func NewInt(i int) *Wrapper {
+    return NewWrapper(i);
+}
+
+func NewUint64 (u uint64) *Wrapper {
+    return NewWrapper(u)
+}
+
+func NewString (s string) *Wrapper {
+    return NewWrapper(s);
+}
+
+func NewBool (b bool) *Wrapper {
+    return NewWrapper(b);
 }
 
 func isInt(v reflect.Value) bool {
