@@ -23,7 +23,7 @@ func wrongType (w string, g reflect.Kind) *Error {
     return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
-func (i *Wrapper) getData() interface{} { return i.dat }
+func (i *Wrapper) GetData() interface{} { return i.dat }
 func (i *Wrapper) Error() *Error { return i.err; }
 func (i *Wrapper) IsOk() bool { return i.Error() == nil; }
 

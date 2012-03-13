@@ -2,7 +2,9 @@
 
 package jsonw
 
-import "testing"
+import (
+  "testing"
+)
 
 func TestInt (t *testing.T) {
 	const x = 100;
