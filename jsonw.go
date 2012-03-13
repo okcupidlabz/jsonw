@@ -36,6 +36,8 @@ func (i *Wrapper) GetData() (dat interface{}, err error) {
     return 
 }
 
+func (i *Wrapper) GetDataOrNil() interface{} { return i.getData(); }
+
 func NewWrapper (i interface{}) (rd *Wrapper) {
     rd = new (Wrapper);
     rd.dat = i;
