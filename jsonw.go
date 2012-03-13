@@ -7,32 +7,9 @@ import (
     "reflect"
 )
 
-type Wrapper interface {
-    IsOk() bool
-    Error() *Error
-    GetInt() (ret int64, err error)
-    GetUint() (ret uint64, err error)
-    GetBool() (ret bool, err error)
-    GetString() (s string, err error)
-    AtIndex(i int) Wrapper
-    Len() (ret int, err error) 
-    Keys() (v []string, err error) 
-    IsNil() bool
-    AtKey(s string) Wrapper
-    getData() interface{}
-}
-
-type base struct {
+type Wrapper struct {
     dat interface{}
     err *Error
-}
-
-type Reader struct {
-    base
-}
-
-type Writer struct {
-    base
 }
 
 type Error struct {
@@ -45,12 +22,12 @@ func wrongType (w string, g reflect.Kind) *Error {
     return &Error { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
-func (i *base) getData() interface{} { return i.dat }
-func (i *base) Error() *Error { return i.err; }
-func (i *base) IsOk() bool { return i.Error() == nil; }
+func (i *Wrapper) getData() interface{} { return i.dat }
+func (i *Wrapper) Error() *Error { return i.err; }
+func (i *Wrapper) IsOk() bool { return i.Error() == nil; }
 
-func MakeReader (i interface{}) (rd *Reader) {
-    rd = new (Reader);
+func MakeWrapper (i interface{}) (rd *Wrapper) {
+    rd = new (Wrapper);
     rd.dat = i;
     return rd;
 }
@@ -69,7 +46,7 @@ func isUint(v reflect.Value) bool {
         k == reflect.Uint64
 }
 
-func (rd *Reader) GetInt() (ret int64, err error) {
+func (rd *Wrapper) GetInt() (ret int64, err error) {
     if rd.err != nil {
         err = rd.err;
     } else {
@@ -87,7 +64,7 @@ func (rd *Reader) GetInt() (ret int64, err error) {
     return 
 }
 
-func (rd *Reader) GetUint() (ret uint64, err error) {
+func (rd *Wrapper) GetUint() (ret uint64, err error) {
     if rd.err != nil {
         err = rd.err;
     } else {
@@ -105,7 +82,7 @@ func (rd *Reader) GetUint() (ret uint64, err error) {
     return
 }
 
-func (rd *Reader) GetBool() (ret bool, err error) {
+func (rd *Wrapper) GetBool() (ret bool, err error) {
     if rd.err != nil {
         err = rd.err
     } else {
@@ -120,7 +97,7 @@ func (rd *Reader) GetBool() (ret bool, err error) {
     return
 }
 
-func (rd *Reader) GetString() (ret string, err error) {
+func (rd *Wrapper) GetString() (ret string, err error) {
     if rd.err != nil {
         err = rd.err;
     } else {
@@ -135,9 +112,8 @@ func (rd *Reader) GetString() (ret string, err error) {
     return
 }
 
-func (rd *Reader) AtIndex(i int) Wrapper {
-    in, v := rd.asArray()
-    ret := &Reader{ *in }
+func (rd *Wrapper) AtIndex(i int) *Wrapper {
+    ret, v := rd.asArray()
     if v == nil {
 
     } else if len (v) >= i {
@@ -149,7 +125,7 @@ func (rd *Reader) AtIndex(i int) Wrapper {
     return ret;
 }
 
-func (rd *Reader) Len() (ret int, err error) {
+func (rd *Wrapper) Len() (ret int, err error) {
     tmp, v := rd.asArray()
     if v == nil {
         err = tmp.err
@@ -159,7 +135,7 @@ func (rd *Reader) Len() (ret int, err error) {
     return
 }
 
-func (i *base) Keys() (v []string, err error) {
+func (i *Wrapper) Keys() (v []string, err error) {
     tmp, d := i.asDictionary()
     if d == nil {
       err = tmp.err;
@@ -174,13 +150,13 @@ func (i *base) Keys() (v []string, err error) {
     return
 }
 
-func (i *base) asArray() (ret *base, v []interface{}) {
+func (i *Wrapper) asArray() (ret *Wrapper, v []interface{}) {
     if i.err != nil {
         ret = i;
     } else {
         var ok bool
         v, ok = (i.dat).([]interface{});
-        ret = new(base);
+        ret = new(Wrapper);
         if !ok {
             ret.err = wrongType ("array", reflect.ValueOf(i.dat).Kind());
         }
@@ -188,13 +164,12 @@ func (i *base) asArray() (ret *base, v []interface{}) {
     return
 }
 
-func (rd *Reader) IsNil() bool {
+func (rd *Wrapper) IsNil() bool {
     return rd.dat == nil;
 }
 
-func (rd *Reader) AtKey(s string) Wrapper {
-    i, d := rd.asDictionary()
-    ret := &Reader { *i }
+func (rd *Wrapper) AtKey(s string) *Wrapper {
+    ret, d := rd.asDictionary()
 
     if d != nil {
         val,found := d[s];
@@ -207,7 +182,7 @@ func (rd *Reader) AtKey(s string) Wrapper {
     return ret;
 }
 
-func (w *Writer) SetKey(s string, val Wrapper) error {
+func (w *Wrapper) SetKey(s string, val Wrapper) error {
     b, d := w.asDictionary()
     if d != nil {
         d[s] = val.getData()
@@ -215,7 +190,7 @@ func (w *Writer) SetKey(s string, val Wrapper) error {
     return b.Error()
 }
 
-func (w *Writer) SetIndex (i int, val Wrapper) error {
+func (w *Wrapper) SetIndex (i int, val Wrapper) error {
     b, d := w.asArray()
     if d != nil {
         d[i] = val.getData()
@@ -224,13 +199,13 @@ func (w *Writer) SetIndex (i int, val Wrapper) error {
 
 }
 
-func (i *base) asDictionary() (ret *base, d map[string]interface{}) {
+func (i *Wrapper) asDictionary() (ret *Wrapper, d map[string]interface{}) {
     if i.err != nil {
         ret = i
     } else {
         var ok bool
         d, ok = (i.dat).(map[string]interface{});
-        ret = new (base);
+        ret = new (Wrapper);
         if !ok {
             ret.err = wrongType ("dict", reflect.ValueOf(i.dat).Kind());
         }
