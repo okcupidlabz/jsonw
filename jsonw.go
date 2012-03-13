@@ -9,7 +9,7 @@ import (
 
 type JsonWrap struct {
     dat interface{}
-    err error
+    err JsonWrapError
 }
 
 type JsonWrapError struct {
@@ -22,6 +22,9 @@ func wrongType (w string, g reflect.Kind) JsonWrapError {
     return JsonWrapError { fmt.Sprintf("type error: wanted %s, got %s", w, g) }
 }
 
+func (jw *jsonWrap) IsOk() bool { return jw.err == nil; }
+func (jw *jsonWrap) Error() JsonWrapError { return jw.err; }
+
 func MakeJsonWrap (i interface{}) (jw *JsonWrap) {
     jw = new (JsonWrap);
     jw.dat = i;
@@ -29,15 +32,15 @@ func MakeJsonWrap (i interface{}) (jw *JsonWrap) {
 }
 
 func isInt(v reflect.Value) bool {
-	k := v.Kind()
-	return k == reflect.Int || k == reflect.Int8 || 
+  k := v.Kind()
+  return k == reflect.Int || k == reflect.Int8 || 
         k == reflect.Int16 || k == reflect.Int32 || 
         k == reflect.Int64
 }
 
 func isUint(v reflect.Value) bool {
-	k := v.Kind()
-	return k == reflect.Uint || k == reflect.Uint8 || 
+  k := v.Kind()
+  return k == reflect.Uint || k == reflect.Uint8 || 
         k == reflect.Uint16 || k == reflect.Uint32 || 
         k == reflect.Uint64
 }
@@ -107,33 +110,71 @@ func (jw *JsonWrap) GetString() (ret string, err error) {
     return
 }
 
-func (jw *JsonWrap) AtIndex(i int) (*JsonWrap) {
-    v, ok := (jw.dat).([]interface{});
-    ret := new(JsonWrap);
-    if ok && len(v) < i {
+func (jw *JsonWrap) AtIndex(i int) *JsonWrap {
+    ret, v := jw.asArray()
+    if v == nil {
+
+    } else if len (v) >= i {
+        m := fmt.Sprintf ("index out of bounds %d >= %d", i, len(v))
+        ret.err = JsonWrapError { m };
+    } else {
         ret.dat = v[i];
     }
-    if !ok {
-		ret.err = JsonWrapError { fmt.Sprintf("Array[%d] out of bounds", i) }
-    }
     return ret;
+}
+
+func (jw *JsonWrap) Len() (ret int, err JsonWrapError) {
+    jw, v := jw.asArray()
+    if v == nil {
+        err = jw.err
+    } else {
+        ret = len(v);
+    }
+    return
+}
+
+func (jw *JsonWrap) asArray() (ret *JsonWrap, v []interface{}) {
+    if jw.err != nil {
+        ret = jw;
+    } else {
+        var ok bool
+        v, ok = (jw.dat).([]interface{});
+        ret = new(JsonWrap);
+        if !ok {
+            ret.err = wrongType ("array", reflect.ValueOf(jw.dat).Kind());
+        }
+    }
+    return
 }
 
 func (jw *JsonWrap) IsNil() bool {
     return jw.dat == nil;
 }
 
-func (jw *JsonWrap) AtKey(s string) (*JsonWrap) {
-    v, ok := (jw.dat).(map[string]interface{});
-    ret := new (JsonWrap);
-    if ok {
-        val, ok := v[s];
-        if ok {
+func (jw *JsonWrap) AtKey(s string) *JsonWrap {
+    ret, d := jw.asDictionary()
+
+    if d != nil {
+        val,found := d[s];
+        if found {
             ret.dat = val;
+        } else {
+            ret.dat = nil;
         }
     }
-    if !ok {
-        ret.err = JsonWrapError { fmt.Sprintf ("Dict[%s] not found", s) }
+    return ret;
+}
+
+func (jw *JsonWrap) asDictionary() (ret *JsonWrap, d map[string]interface{}) {
+    if jw.err != nil {
+        ret = jw
+    } else {
+        var ok bool
+        d, ok = (jw.dat).(map[string]interface{});
+        ret := new (JsonWrap);
+        if !ok {
+            ret.err = wrongType ("dict", reflect.ValueOf(jw.dat).Kind());
+        }
     }
     return ret;
 }
