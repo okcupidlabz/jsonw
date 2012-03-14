@@ -152,15 +152,14 @@ func (rd *Wrapper) GetBool() (ret bool, err error) {
 func (rd *Wrapper) GetString() (ret string, err error) {
     if rd.err != nil {
         err = rd.err;
+    } else if v := reflect.ValueOf (rd.dat); v.Kind() == reflect.String {
+        ret = v.String();
+    } else if b, ok := rd.dat.([]uint8); ok {
+        ret = string(b);
+    } else if b, ok := rd.dat.([]byte); ok {
+        ret = string (b);
     } else {
-        v := reflect.ValueOf (rd.dat)
-        k := v.Kind()
-        if k == reflect.String {
-            ret = v.String();
-        } else {
-            fmt.Printf("full type: %s\n", v.String())
-            err = wrongType("string", k);
-        }
+        err = wrongType("string", v.Kind());
     }
     return
 }

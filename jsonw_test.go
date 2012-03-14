@@ -3,7 +3,8 @@
 package jsonw
 
 import (
-  "testing"
+    "testing"
+    "bytes"
 )
 
 func TestInt (t *testing.T) {
@@ -24,6 +25,18 @@ func TestBigInt (t *testing.T) {
     if v, _ := w.GetUint(); v != x {
 		t.Errorf("Big uint test failed");
     }
+}
+
+func TestBytes (t *testing.T) {
+    s := "hello world";
+    buf := bytes.NewBufferString(s)
+    bv := buf.Bytes()
+
+    w := NewWrapper(bv)
+    if out, err := w.GetString(); err != nil || out != s {
+        t.Errorf("failed to get %s back out", s)
+    }
+    
 }
 
 func TestDict (t *testing.T) {
