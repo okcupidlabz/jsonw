@@ -24,7 +24,6 @@ func wrongType (w string, g reflect.Kind) *Error {
 }
 
 func (i *Wrapper) getData() interface{} { return i.dat }
-func (i *Wrapper) Error() *Error { return i.err; }
 func (i *Wrapper) IsOk() bool { return i.Error() == nil; }
 
 func (i *Wrapper) GetData() (dat interface{}, err error) { 
@@ -34,6 +33,13 @@ func (i *Wrapper) GetData() (dat interface{}, err error) {
         dat = i.dat
     }
     return 
+}
+
+func (i *Wrapper) Error() (e error) { 
+    if i.err != nil {
+        e = *i.err
+    }
+    return
 }
 
 func (i *Wrapper) GetDataOrNil() interface{} { return i.getData(); }
