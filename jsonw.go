@@ -278,6 +278,7 @@ func (i *Wrapper) asDictionary() (ret *Wrapper, d map[string]interface{}) {
         d, ok = (i.dat).(map[string]interface{});
         ret = new (Wrapper);
         if !ok {
+            fmt.Printf("type gotten: %s", reflect.ValueOf(i.dat).String())
             ret.err = wrongType ("dict", reflect.ValueOf(i.dat).Kind());
         }
     }
