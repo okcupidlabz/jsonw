@@ -158,6 +158,7 @@ func (rd *Wrapper) GetString() (ret string, err error) {
         if k == reflect.String {
             ret = v.String();
         } else {
+            fmt.Printf("full type: %s\n", v.String())
             err = wrongType("string", k);
         }
     }
