@@ -98,6 +98,11 @@ func isUint(v reflect.Value) bool {
         k == reflect.Uint64
 }
 
+func isFloat(v reflect.Value) bool {
+    k := v.Kind()
+    return k == reflect.Float32 || k == reflect.Float64
+}
+
 func (rd *Wrapper) GetInt() (ret int64, err error) {
     if rd.err != nil {
         err = rd.err;
@@ -105,6 +110,8 @@ func (rd *Wrapper) GetInt() (ret int64, err error) {
         v := reflect.ValueOf (rd.dat)
         if isInt (v) {
             ret = v.Int()
+        } else if isFloat (v) {
+            ret = int64(v.Float())
         } else if ! isUint (v) {
             err = wrongType ("int", v.Kind());
         } else if v.Uint() <= (1<<63 - 1) {
@@ -120,15 +127,27 @@ func (rd *Wrapper) GetUint() (ret uint64, err error) {
     if rd.err != nil {
         err = rd.err;
     } else {
+        underflow := false
         v := reflect.ValueOf (rd.dat)
         if isUint (v) {
             ret = v.Uint()
+        } else if isFloat (v) {
+            if v.Float() <= 0 {
+                underflow = true;
+            } else {
+                ret = uint64(v.Float())
+            }
         } else if ! isInt (v) {
             err = wrongType ("uint", v.Kind());
         } else if v.Int() >= 0 {
             ret = uint64(v.Int());
         } else {
+            underflow = true
+        }
+
+        if underflow {
             err = Error { "Unsigned uint64 underflow error" }
+
         }
     }
     return
