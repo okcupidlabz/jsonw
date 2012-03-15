@@ -69,6 +69,10 @@ func NewInt64(i int64) *Wrapper {
 	return NewWrapper(i)
 }
 
+func NewFloat64(f float64) *Wrapper {
+	return NewWrapper (f)
+}
+
 func NewUint64(u uint64) *Wrapper {
 	return NewWrapper(u)
 }
@@ -98,6 +102,22 @@ func isUint(v reflect.Value) bool {
 func isFloat(v reflect.Value) bool {
 	k := v.Kind()
 	return k == reflect.Float32 || k == reflect.Float64
+}
+
+func (rd *Wrapper) GetFloat (ret float64, err error) {
+	if rd.err != nil {
+		err = rd.err
+	} else {
+		v := reflect.ValueOf(rd.dat)
+		if isFloat(v) {
+			ret = float64(v.Float())
+		} else if isInt(v) {
+			ret = float64(v.Int())
+		} else {
+			err = Error{"float cast error"}
+		}
+	}
+	return
 }
 
 func (rd *Wrapper) GetInt() (ret int64, err error) {
