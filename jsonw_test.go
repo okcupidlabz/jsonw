@@ -16,10 +16,10 @@ func TestInt(t *testing.T) {
 func TestBigInt(t *testing.T) {
 	const x = 1<<62 + 55555
 	w := NewInt64(x)
-	if v, _ := w.GetInt(); v != x {
+	if v, _ := w.GetInt64(); v != x {
 		t.Errorf("Big int test failed")
 	}
-	if v, _ := w.GetUint(); v != x {
+	if v, _ := w.GetUint64(); v != x {
 		t.Errorf("Big uint test failed")
 	}
 }

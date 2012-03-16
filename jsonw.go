@@ -120,7 +120,7 @@ func (rd *Wrapper) GetFloat (ret float64, err error) {
 	return
 }
 
-func (rd *Wrapper) GetInt() (ret int64, err error) {
+func (rd *Wrapper) GetInt64() (ret int64, err error) {
 	if rd.err != nil {
 		err = rd.err
 	} else {
@@ -140,7 +140,17 @@ func (rd *Wrapper) GetInt() (ret int64, err error) {
 	return
 }
 
-func (rd *Wrapper) GetUint() (ret uint64, err error) {
+func (rd *Wrapper) GetInt() (i int, err error) {
+	i64, e := rd.GetInt64()
+	return int(i64), e
+}
+
+func (rd *Wrapper) GetUint() (u uint, err error) {
+	u64, e := rd.GetUint64()
+	return uint(u64), e
+}
+
+func (rd *Wrapper) GetUint64() (ret uint64, err error) {
 	if rd.err != nil {
 		err = rd.err
 	} else {
