@@ -36,6 +36,57 @@ func TestBytes(t *testing.T) {
 
 }
 
+func TestVoid(t *testing.T) {
+	w := NewDictionary()
+
+	/*
+	 * { "uno" : "un",
+	 *   "dos" : "deux",
+	 *   "tres" : "trois",
+	 *   "quatro" : 4,
+	 *   "others" : [ 100, 101, 102 ]
+         *  }
+	 */
+	w.SetKey("uno", NewString("un"))
+	w.SetKey("dos", NewString("deux"))
+	w.SetKey("tres", NewString("trois"))
+	w.SetKey("quatro", NewInt(4))
+	w.SetKey("others", NewArray(3))
+	w.AtKey("others").SetIndex(0,NewInt(100))
+	w.AtKey("others").SetIndex(1,NewInt(101))
+	w.AtKey("others").SetIndex(2,NewInt(102))
+
+
+	var e, e2 error
+	var s string
+	var i int
+
+	w.AtKey("dos").GetStringVoid(&s, &e)
+	if e != nil || s != "deux" {
+		t.Errorf("Failure for dos/deux");
+	}
+	w.AtKey("tres").GetIntVoid(&i, &e)
+	if e == nil {
+		t.Errorf("Expected an error on tres!")
+	}
+	expected := "<root>.tres: type error: wanted int, got string"
+	if e.Error () != expected{ 
+		t.Errorf("Wanted error '%s', but got '%s'", expected, e.Error())
+	}
+	w.AtKey("quatro").GetStringVoid(&s, &e)
+	if e.Error () != expected{ 
+		t.Errorf("Wanted error '%s' to stick around, but got '%s'", 
+			expected, e.Error())
+	}
+	w.AtKey("others").AtIndex(2).GetStringVoid(&s, &e2)
+	expected = "<root>.others[2]: type error: wanted string, got int"
+	if e2 == nil || e2.Error () != expected {
+		t.Errorf("others[2]: Wanted error '%s', got '%s'",
+			expected, e2)
+	}
+
+}
+
 func TestDict(t *testing.T) {
 	w := NewDictionary()
 	const dog = 3333
@@ -78,3 +129,5 @@ func TestDict(t *testing.T) {
 		t.Errorf("Wrong waterfowl in array: %s v swan (%s)", v)
 	}
 }
+
+

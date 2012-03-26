@@ -3,11 +3,13 @@ package jsonw
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type Wrapper struct {
 	dat interface{}
 	err *Error
+	access []string
 }
 
 type Error struct {
@@ -16,8 +18,15 @@ type Error struct {
 
 func (e Error) Error() string { return e.msg }
 
-func wrongType(w string, g reflect.Kind) *Error {
-	return &Error{fmt.Sprintf("type error: wanted %s, got %s", w, g)}
+func (w *Wrapper) NewError(format string, a ...interface{}) *Error {
+	m1 := fmt.Sprintf(format, a...)
+	p := w.AccessPath()
+	m2 := fmt.Sprintf("%s: %s", p, m1)
+	return &Error{m2}
+}
+
+func (w *Wrapper) wrongType(want string, got reflect.Kind) *Error {
+	return w.NewError("type error: wanted %s, got %s", want, got)
 }
 
 func (i *Wrapper) getData() interface{} { return i.dat }
@@ -32,6 +41,16 @@ func (i *Wrapper) GetData() (dat interface{}, err error) {
 	return
 }
 
+func (i *Wrapper) GetDataVoid(dp *interface{}, ep *error) {
+	d,e := i.GetData()
+	if e == nil {
+		*dp = d;
+	} else if e != nil && ep != nil && *ep == nil {
+		*ep = e
+	}
+
+}
+
 func (i *Wrapper) Error() (e error) {
 	if i.err != nil {
 		e = *i.err
@@ -44,6 +63,8 @@ func (i *Wrapper) GetDataOrNil() interface{} { return i.getData() }
 func NewWrapper(i interface{}) (rd *Wrapper) {
 	rd = new(Wrapper)
 	rd.dat = i
+	rd.access = make([]string,1,1)
+	rd.access[0] = "<root>"
 	return rd
 }
 
@@ -104,7 +125,11 @@ func isFloat(v reflect.Value) bool {
 	return k == reflect.Float32 || k == reflect.Float64
 }
 
-func (rd *Wrapper) GetFloat (ret float64, err error) {
+func (i *Wrapper) AccessPath() string {
+	return strings.Join (i.access, "")
+}
+
+func (rd *Wrapper) GetFloat() (ret float64, err error) {
 	if rd.err != nil {
 		err = rd.err
 	} else {
@@ -114,10 +139,19 @@ func (rd *Wrapper) GetFloat (ret float64, err error) {
 		} else if isInt(v) {
 			ret = float64(v.Int())
 		} else {
-			err = Error{"float cast error"}
+			err = rd.NewError("float cast error")
 		}
 	}
 	return
+}
+
+func (w *Wrapper) GetFloatVoid(fp *float64, errp *error) {
+	f, e := w.GetFloat()
+	if e == nil {
+		*fp = f;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
 }
 
 func (rd *Wrapper) GetInt64() (ret int64, err error) {
@@ -130,14 +164,23 @@ func (rd *Wrapper) GetInt64() (ret int64, err error) {
 		} else if isFloat(v) {
 			ret = int64(v.Float())
 		} else if !isUint(v) {
-			err = wrongType("int", v.Kind())
+			err = rd.wrongType("int", v.Kind())
 		} else if v.Uint() <= (1<<63 - 1) {
 			ret = int64(v.Uint())
 		} else {
-			err = Error{"Signed int64 overflow error"}
+			err = rd.NewError("Signed int64 overflow error")
 		}
 	}
 	return
+}
+
+func (w *Wrapper) GetInt64Void(ip *int64, errp *error) {
+	i, e := w.GetInt64()
+	if e == nil {
+		*ip = i;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
 }
 
 func (rd *Wrapper) GetInt() (i int, err error) {
@@ -145,9 +188,27 @@ func (rd *Wrapper) GetInt() (i int, err error) {
 	return int(i64), e
 }
 
+func (w *Wrapper) GetIntVoid(ip *int, errp *error) {
+	i, e := w.GetInt()
+	if e == nil {
+		*ip = i;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
+}
+
 func (rd *Wrapper) GetUint() (u uint, err error) {
 	u64, e := rd.GetUint64()
 	return uint(u64), e
+}
+
+func (w *Wrapper) GetUintVoid(ip *uint, errp *error) {
+	i, e := w.GetUint()
+	if e == nil {
+		*ip = i;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
 }
 
 func (rd *Wrapper) GetUint64() (ret uint64, err error) {
@@ -165,7 +226,7 @@ func (rd *Wrapper) GetUint64() (ret uint64, err error) {
 				ret = uint64(v.Float())
 			}
 		} else if !isInt(v) {
-			err = wrongType("uint", v.Kind())
+			err = rd.wrongType("uint", v.Kind())
 		} else if v.Int() >= 0 {
 			ret = uint64(v.Int())
 		} else {
@@ -173,11 +234,20 @@ func (rd *Wrapper) GetUint64() (ret uint64, err error) {
 		}
 
 		if underflow {
-			err = Error{"Unsigned uint64 underflow error"}
+			err = rd.NewError("Unsigned uint64 underflow error")
 
 		}
 	}
 	return
+}
+
+func (w *Wrapper) GetUint64Void(ip *uint64, errp *error) {
+	i, e := w.GetUint64()
+	if e == nil {
+		*ip = i;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
 }
 
 func (rd *Wrapper) GetBool() (ret bool, err error) {
@@ -189,11 +259,21 @@ func (rd *Wrapper) GetBool() (ret bool, err error) {
 		if k == reflect.Bool {
 			ret = v.Bool()
 		} else {
-			err = wrongType("bool", k)
+			err = rd.wrongType("bool", k)
 		}
 	}
 	return
 }
+
+func (w *Wrapper) GetBoolVoid(bp *bool, errp *error) {
+	b, e  := w.GetBool()
+	if e == nil {
+		*bp = b;
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
+}
+
 
 func (rd *Wrapper) GetString() (ret string, err error) {
 	if rd.err != nil {
@@ -205,9 +285,18 @@ func (rd *Wrapper) GetString() (ret string, err error) {
 	} else if b, ok := rd.dat.([]byte); ok {
 		ret = string(b)
 	} else {
-		err = wrongType("string", v.Kind())
+		err = rd.wrongType("string", v.Kind())
 	}
 	return
+}
+
+func (w *Wrapper) GetStringVoid(sp *string, errp *error) {
+	s,e  := w.GetString()
+	if e == nil {
+		*sp = s
+	} else if e != nil && errp != nil && *errp == nil {
+		*errp = e
+	}
 }
 
 func (rd *Wrapper) AtIndex(i int) *Wrapper {
@@ -215,11 +304,11 @@ func (rd *Wrapper) AtIndex(i int) *Wrapper {
 	if v == nil {
 
 	} else if len(v) <= i {
-		m := fmt.Sprintf("index out of bounds %d >= %d", i, len(v))
-		ret.err = &Error{m}
+		ret.err = rd.NewError("index out of bounds %d >= %d", i, len(v))
 	} else {
 		ret.dat = v[i]
 	}
+	ret.access = append(ret.access, fmt.Sprintf("[%d]",i))
 	return ret
 }
 
@@ -255,8 +344,9 @@ func (i *Wrapper) asArray() (ret *Wrapper, v []interface{}) {
 		var ok bool
 		v, ok = (i.dat).([]interface{})
 		ret = new(Wrapper)
+		ret.access = i.access;
 		if !ok {
-			ret.err = wrongType("array", reflect.ValueOf(i.dat).Kind())
+			ret.err = i.wrongType("array", reflect.ValueOf(i.dat).Kind())
 		}
 	}
 	return
@@ -277,6 +367,7 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
 			ret.dat = nil
 		}
 	}
+	ret.access = append(ret.access, fmt.Sprintf (".%s", s))
 	return ret
 }
 
@@ -304,8 +395,9 @@ func (i *Wrapper) asDictionary() (ret *Wrapper, d map[string]interface{}) {
 		var ok bool
 		d, ok = (i.dat).(map[string]interface{})
 		ret = new(Wrapper)
+		ret.access = i.access;
 		if !ok {
-			ret.err = wrongType("dict", reflect.ValueOf(i.dat).Kind())
+			ret.err = i.wrongType("dict", reflect.ValueOf(i.dat).Kind())
 		}
 	}
 	return
