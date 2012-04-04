@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"strconv"
 )
 
 type Wrapper struct {
@@ -401,4 +402,28 @@ func (i *Wrapper) asDictionary() (ret *Wrapper, d map[string]interface{}) {
 		}
 	}
 	return
+}
+
+func (w *Wrapper) AtPath(path string) (ret *Wrapper) {
+	bits := strings.Split(path, ".")
+	ret = w
+	for _, bit := range bits {
+		if len(bit) > 0 && (bit[0] >= '0' && bit[0] <= '9') {
+			// this is probably an int, use AtIndex instead
+			if val, e := strconv.Atoi(bit); e == nil {
+				ret = ret.AtIndex(val)
+			} else {
+				ret = ret.AtKey(bit)
+			}
+		} else if len(bit) > 0 {
+			ret = ret.AtKey(bit)
+		} else {
+			break
+		}
+
+		if ret.dat == nil || ret.err != nil {
+			break
+		}
+	}
+	return ret
 }

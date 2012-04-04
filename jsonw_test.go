@@ -131,3 +131,30 @@ func TestDict(t *testing.T) {
 }
 
 
+func TestPath(t *testing.T) {
+	w := NewDictionary()
+	w.SetKey("dogs", NewArray(2))
+	w.AtKey("dogs").SetIndex(0, NewDictionary())
+	w.AtKey("dogs").SetIndex(1, NewDictionary())
+	
+	w.AtKey("dogs").AtIndex(0).SetKey("age", NewInt(7))
+	w.AtKey("dogs").AtIndex(0).SetKey("name", NewDictionary())
+	w.AtKey("dogs").AtIndex(0).AtKey("name").SetKey("first", NewString("Fido"))
+
+	w.AtKey("dogs").AtIndex(1).SetKey("age", NewInt(3))
+	w.AtKey("dogs").AtIndex(1).SetKey("name", NewDictionary())
+	w.AtKey("dogs").AtIndex(1).AtKey("name").SetKey("first", NewString("Peanut"))
+
+
+	if v, e := w.AtPath("dogs.0.age").GetInt(); e != nil {
+		t.Errorf("Expected 7 for dogs.0.age, got Error: %v", e)
+	} else if int(v) != 7 {
+		t.Errorf("Expected 7 for dogs.0.age, got: %v", v)
+	}
+
+	if v, e := w.AtPath("dogs.1.name.first").GetString(); e != nil {
+		t.Errorf("Expected Peanut for dogs.1.name.first, got Error: %v", e)
+	} else if v != "Peanut" {
+		t.Errorf("Expected Peanut for dogs.1.name.first, got: %v", v)
+	}
+}
