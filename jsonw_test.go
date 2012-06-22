@@ -3,6 +3,7 @@ package jsonw
 import (
 	"bytes"
 	"testing"
+	"encoding/json"
 )
 
 func TestInt(t *testing.T) {
@@ -22,6 +23,35 @@ func TestBigInt(t *testing.T) {
 	if v, _ := w.GetUint64(); v != x {
 		t.Errorf("Big uint test failed")
 	}
+}
+
+func TestFloat (t *testing.T) {
+	e := 2.71828183;
+	f := NewFloat64(e)
+	e2, err := f.GetFloat(); 
+
+	if err != nil {
+		t.Errorf("Getting a float failed: %s\n", err);
+	} else if (e - e2)*(e - e2) > .1 {
+		t.Errorf("Weird mismatch: %f v %f\n", e, e2);
+	}
+
+	jsonStream := []byte("{ \"e\" : 2.71828183 }");
+	var res interface{}
+	err = json.Unmarshal(jsonStream, &res);
+	if err != nil {
+		t.Errorf("cannot unmarshall: %s\n", err);
+	}
+	w := NewWrapper(res)
+	
+	e2, err = w.AtKey("e").GetFloat()
+	if err != nil {
+		t.Errorf("Pass 2: Getting a float failed: %s\n", err);
+	} else if (e - e2)*(e - e2) > .1 {
+		t.Errorf("Pass 2: Weird mismatch: %f v %f\n", e, e2);
+	}
+
+	
 }
 
 func TestBytes(t *testing.T) {
