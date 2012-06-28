@@ -139,6 +139,8 @@ func (rd *Wrapper) GetFloat() (ret float64, err error) {
 			ret = float64(v.Float())
 		} else if isInt(v) {
 			ret = float64(v.Int())
+    } else if isUint(v) {
+      ret = float64(v.Uint())
 		} else {
 			err = rd.NewError("float cast error")
 		}
