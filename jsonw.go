@@ -300,7 +300,7 @@ func (w *Wrapper) GetStringVoid(sp *string, errp *error) {
 }
 
 func (rd *Wrapper) AtIndex(i int) *Wrapper {
-	ret, v := rd.asArray()
+	ret, v := rd.AsArray()
 	if v == nil {
 
 	} else if len(v) <= i {
@@ -313,7 +313,7 @@ func (rd *Wrapper) AtIndex(i int) *Wrapper {
 }
 
 func (rd *Wrapper) Len() (ret int, err error) {
-	tmp, v := rd.asArray()
+	tmp, v := rd.AsArray()
 	if v == nil {
 		err = tmp.err
 	} else {
@@ -323,7 +323,7 @@ func (rd *Wrapper) Len() (ret int, err error) {
 }
 
 func (i *Wrapper) Keys() (v []string, err error) {
-	tmp, d := i.asDictionary()
+	tmp, d := i.AsDictionary()
 	if d == nil {
 		err = tmp.err
 	} else {
@@ -337,7 +337,7 @@ func (i *Wrapper) Keys() (v []string, err error) {
 	return
 }
 
-func (i *Wrapper) asArray() (ret *Wrapper, v []interface{}) {
+func (i *Wrapper) AsArray() (ret *Wrapper, v []interface{}) {
 	if i.err != nil {
 		ret = i
 	} else {
@@ -357,7 +357,7 @@ func (rd *Wrapper) IsNil() bool {
 }
 
 func (rd *Wrapper) AtKey(s string) *Wrapper {
-	ret, d := rd.asDictionary()
+	ret, d := rd.AsDictionary()
 
 	if d != nil {
 		val, found := d[s]
@@ -372,7 +372,7 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
 }
 
 func (w *Wrapper) SetKey(s string, val *Wrapper) error {
-	b, d := w.asDictionary()
+	b, d := w.AsDictionary()
 	if d != nil {
 		d[s] = val.getData()
 	}
@@ -380,7 +380,7 @@ func (w *Wrapper) SetKey(s string, val *Wrapper) error {
 }
 
 func (w *Wrapper) SetIndex(i int, val *Wrapper) error {
-	b, d := w.asArray()
+	b, d := w.AsArray()
 	if d != nil {
 		d[i] = val.getData()
 	}
@@ -388,7 +388,7 @@ func (w *Wrapper) SetIndex(i int, val *Wrapper) error {
 
 }
 
-func (i *Wrapper) asDictionary() (ret *Wrapper, d map[string]interface{}) {
+func (i *Wrapper) AsDictionary() (ret *Wrapper, d map[string]interface{}) {
 	if i.err != nil {
 		ret = i
 	} else {
