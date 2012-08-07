@@ -382,7 +382,7 @@ func (rd *Wrapper) ToDictionary() (d map[string]interface{}, e error) {
 	return
 }
 
-func (rd *Wrapper) ToArray(v []interface{}, e error) {
+func (rd *Wrapper) ToArray() (v []interface{}, e error) {
 	var tmp *Wrapper
 	tmp, v = rd.asArray ()
 	if tmp.err != nil {
