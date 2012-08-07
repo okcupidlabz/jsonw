@@ -373,20 +373,20 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
 	return ret
 }
 
-func (rd *Wrapper) ToDictionary() (d map[string]interface{}, e error) {
-	var tmp *Wrapper
-	tmp, d = rd.asDictionary()
-	if tmp.err != nil {
-		e = tmp.err;
+func (rd *Wrapper) ToDictionary() (out *Wrapper, e error) {
+	out,_ = rd.asDictionary()
+	if out.err != nil {
+		e = out.err;
+		out = nil;
 	}
 	return
 }
 
-func (rd *Wrapper) ToArray() (v []interface{}, e error) {
-	var tmp *Wrapper
-	tmp, v = rd.asArray ()
-	if tmp.err != nil {
-		e = tmp.err;
+func (rd *Wrapper) ToArray() (out *Wrapper, e error) {
+	out,_ = rd.asArray ()
+	if out.err != nil {
+		e = out.err;
+		out = nil;
 	}
 	return
 }
