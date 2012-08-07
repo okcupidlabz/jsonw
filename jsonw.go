@@ -374,19 +374,21 @@ func (rd *Wrapper) AtKey(s string) *Wrapper {
 }
 
 func (rd *Wrapper) ToDictionary() (out *Wrapper, e error) {
-	out,_ = rd.asDictionary()
-	if out.err != nil {
-		e = out.err;
-		out = nil;
+	tmp,_ := rd.asDictionary()
+	if tmp.err != nil {
+		e = tmp.err;
+	} else {
+		out = rd;
 	}
 	return
 }
 
 func (rd *Wrapper) ToArray() (out *Wrapper, e error) {
-	out,_ = rd.asArray ()
-	if out.err != nil {
-		e = out.err;
-		out = nil;
+	tmp,_ := rd.asArray ()
+	if tmp.err != nil {
+		e = tmp.err;
+	} else {
+		out = rd;
 	}
 	return
 }
