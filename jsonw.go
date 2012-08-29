@@ -142,7 +142,7 @@ func (rd *Wrapper) GetFloat() (ret float64, err error) {
 		} else if isUint(v) {
 			ret = float64(v.Uint())
 		} else {
-			err = rd.NewError("float cast error")
+			err = rd.wrongType("float-like", v.Kind())
 		}
 	}
 	return
